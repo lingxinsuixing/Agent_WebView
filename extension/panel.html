@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AtomCode MCP Browser</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --surface2: #0f3460;
+      --accent: #e94560;
+      --accent2: #533483;
+      --text: #e4e4e7;
+      --text2: #a1a1aa;
+      --green: #22c55e;
+      --red: #ef4444;
+      --radius: 8px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      padding: 12px;
+      min-width: 320px;
+    }
+    h1 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h1 .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .dot.offline { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--text2);
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .card-value {
+      font-size: 13px;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    .card-value.url { color: var(--accent); font-size: 12px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { opacity: 0.7; }
+    .btn-primary { background: var(--accent2); color: #fff; }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    .toolbar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text2);
+      margin-bottom: 8px;
+    }
+
+    .log {
+      background: var(--surface2);
+      border-radius: var(--radius);
+      padding: 8px;
+      font-family: "Cascadia Code", "Fira Code", monospace;
+      font-size: 11px;
+      max-height: 200px;
+      overflow-y: auto;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+    .log::-webkit-scrollbar { width: 4px; }
+    .log::-webkit-scrollbar-thumb { background: var(--accent2); border-radius: 2px; }
+
+    .log-entry { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 2px 0; }
+    .log-entry.ok { color: var(--green); }
+    .log-entry.err { color: var(--red); }
+
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: var(--text2);
+      font-size: 12px;
+    }
+    .empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .settings-row label { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+    .settings-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      padding: 4px 8px;
+      color: var(--text);
+      font-size: 12px;
+    }
+    .settings-row input:focus { outline: none; border-color: var(--accent2); }
+
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .stat-item {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 8px;
+      text-align: center;
+    }
+    .stat-item .num { font-size: 18px; font-weight: 700; }
+    .stat-item .label { font-size: 10px; color: var(--text2); text-transform: uppercase; }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>
+    <span class="dot" id="statusDot"></span>
+    AtomCode MCP
+  </h1>
+
+  <div class="status-bar">
+    <span id="connStatus">未连接</span>
+    <span id="tabStatus">—</span>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" id="btnConnect">连接</button>
+    <button class="btn btn-danger hidden" id="btnDisconnect">断开</button>
+    <button class="btn btn-success" id="btnRefresh">刷新页面</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">当前页面</div>
+    <div class="card-value" id="pageTitle">—</div>
+    <div class="card-value url" id="pageUrl">—</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-item">
+      <div class="num" id="statLinks">0</div>
+      <div class="label">链接</div>
+    </div>
+    <div class="stat-item">
+      <div class="num" id="statImages">0</div>
+      <div class="label">图片</div>
+    </div>
+    <div class="stat-item">
+      <div class="num" id="statChars">0</div>
+      <div class="label">字符数</div>
+    </div>
+    <div class="stat-item">
+      <div class="num" id="statWords">0</div>
+      <div class="label">表格/表单</div>
+    </div>
+  </div>
+
+  <div class="settings-row">
+    <label>MCP 地址:</label>
+    <input type="text" id="wsUrl" value="ws://localhost:9134" />
+  </div>
+
+  <div class="card-title" style="margin-top: 8px;">日志</div>
+  <div class="log" id="logPanel">
+    <div class="empty-state" id="emptyLog">
+      <div class="icon">📡</div>
+      <div>点击"连接"建立与 MCP Server 的通信</div>
+    </div>
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "agent-webview",
+  "version": "2.0.0",
+  "description": "Agent_WebView MCP Server — 57 tools for Chrome browser control, anti-crawling, stealth, and deep debugging",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js --cdp --data-dir=\"../data\"",
+    "start:extension": "node index.js --data-dir=\"../data\"",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.8.0",
+    "ws": "^8.18.1"
+  }
+}
